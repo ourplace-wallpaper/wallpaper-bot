@@ -1,0 +1,26 @@
+name: Send Wallpaper to Discord
+
+on:
+  push:
+    paths:
+      - 'wallpapers/**'
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Send new images to Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'wallpapers/')
+          for FILE in $FILES; do
+            if [ -f "$FILE" ]; then
+              curl -F "content=🖼️ **New Wallpaper Added!**" -F "file=@$FILE" "$WEBHOOK_URL"
+            fi
+          done
