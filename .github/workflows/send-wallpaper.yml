@@ -1,0 +1,26 @@
+name: Send Wallpaper to Discord
+
+on:
+  push:
+    paths:
+      - 'wallpapers/**'
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Send new images to Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          IMAGE_PATH=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'wallpapers/' | grep -E '\.(png|jpg|jpeg|gif|webp)$' | head -n 1)
+          
+          if [ -n "$IMAGE_PATH" ] && [ -f "$IMAGE_PATH" ]; then
+            echo "Sending $IMAGE_PATH to Discord..."
+            curl -F "content=🖼️ **New Wallpaper Added!**" -F "file=@$IMAGE_PATH" "$WEBHOOK_URL"
+          else
+            echo "No new image found in this commit."
+          fi
